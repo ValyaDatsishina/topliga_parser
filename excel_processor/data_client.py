@@ -4,7 +4,7 @@ import openpyxl as xl
 import os
 from datetime import date, datetime
 
-import xlrd
+# import xlrd
 from translate import Translator
 
 
