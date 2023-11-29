@@ -164,4 +164,6 @@ data/
 excel_processor/test.py
 excel_processor/excel_parser.py
 .idea/
+.env/
+excel_processor/Parser_data.xlsx
 

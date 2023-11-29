@@ -1,23 +1,3 @@
-# import openpyxl as xl
-# import os
-# path1 = '/Users/valentinabelezak/Downloads/topliga_parser/data/liga.xlsx'
-# path2 = '/Users/valentinabelezak/Downloads/topliga_parser/excel_processor/DataFULL.xlsx'
-#
-#
-# # wb1 = xl.load_workbook(filename=path1)
-# # ws1 = wb1.worksheets[0]
-#
-# wb2 = xl.load_workbook(filename=path2)
-# ws2 = wb2.create_sheet(path1)
-# # ws2 = wb2.create_sheet(os.path.basename(path1))
-# ws2.appand('Дистанция','Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Пол', 'Город', 'Мобильный телефон', 'Электронная почта')
-#
-# # for row in ws2:
-# #     for cell in row:
-# #         ws1[cell.coordinate].value = cell.value
-#
-# wb2.save(path2)
-
 import pandas as pd
 import enchant
 import openpyxl as xl
@@ -27,13 +7,15 @@ from datetime import date, datetime
 import xlrd
 from translate import Translator
 
-
 def delete_prefix(list_of_cities: list) -> list:
-    prefix_of_cities = ['г', 'г.', 'с', 'с.', 'д', 'д.', 'п', 'п.', 'рп', 'рп.', 'пгт.', 'пгт', 'ст-ца']
+    prefix_of_cities = ['Город', 'город', 'Г', 'Г.', 'г', 'г.', 'с', 'с.', 'д', 'д.', 'п', 'п.', 'р-н', 'район', 'рп',
+                        'рп.', 'пгт.', 'пгт', 'ст-ца', 'х.', 'х', 'тер.', 'нп', 'мкр', 'мкр.', 'обл', 'обл.']
     export_data = []
     for city in list_of_cities:
+        if city == 0:
+            city = ''
 
-        if type(city) == str:
+        elif type(city) == str:
             trans = enchant.Dict("en_US")
             if trans.check(city):
                 translator = Translator(from_lang="English", to_lang="Russian")
@@ -60,6 +42,43 @@ def delete_prefix(list_of_cities: list) -> list:
     # print(export_data)
     return export_data
 
+def clean_distances(list_of_distances: list):
+    print(list_of_distances)
+    print(len(list_of_distances))
+    export_data = []
+    for distance in list_of_distances:
+        if distance == 0:
+            distance = ''
+        elif 'Детский' in distance or 'детский' in distance:
+            distance = 'Детская миля'
+        elif 'Детская миля' in distance:
+            distance = 'Детская миля'
+        elif '42' in distance:
+            distance = '42.2 км'
+        elif '21' in distance and 'Эстафета' not in distance:
+            distance = '21.1 км'
+        elif '10' in distance and 'км' in distance:
+            distance = '10 км'
+        elif 'Laura' in distance:
+            distance = 'Лаура'
+        elif 'Online' in distance:
+            distance = 'Онлайн'
+        elif 'SWIMRUN' in distance and 'Sprint' not in distance:
+            distance = 'SwimRun'
+        elif 'SWIMRUN' in distance and 'Sprint' in distance:
+            distance = 'SwimRun Sprint'
+        elif 'эстафета 2*5 км' in distance or 'Эстафета 2х5 км' in distance:
+            distance = 'эстафета 2 х 5 км'
+        elif distance == '2 км, с футболкой, 12+':
+            distance = '2 км'
+        else:
+            distance = distance
+
+
+        export_data.append(distance)
+    print(export_data)
+    return export_data
+
 def check_columns(data, columns: list):
     n = 0
     list_of_not_column = []
@@ -74,14 +93,15 @@ def check_columns(data, columns: list):
         return list_of_not_column
 
 
-def add_date(path):
+def add_data(path):
     path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
     data = pd.read_excel(path)
-    data = data.fillna(method='ffill', axis=0)
+    data[['Дистанция','Фамилия', 'Имя']] = data[['Дистанция','Фамилия', 'Имя']].fillna(0)
+    data = data[data.Фамилия != 0]
     dataFULL = pd.read_excel(path2, None)
     columns = ['Дистанция', 'Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Пол', 'Город', 'Мобильный телефон',
                'Электронная почта']
-    print(list(dataFULL.keys()))
+    # print(list(dataFULL.keys()))
 
 
     check = check_columns(data, columns)
@@ -91,8 +111,6 @@ def add_date(path):
         else:
             columns = ', '.join(check)
             print(f'Отсутствуют колонки {columns}')
-    elif os.path.splitext(os.path.basename(path))[0] in list(dataFULL.keys()):
-        print(f'Таблица {os.path.splitext(os.path.basename(path))[0]} уже загружена. Переименуйте файл или загрузите новый')
     else:
         new_data = data[columns]
 
@@ -102,12 +120,32 @@ def add_date(path):
         new_data.pop('Город')
         new_data.insert(loc=6, column='Город', value=cities)
 
-        new_data = new_data.drop_duplicates(subset=['Дистанция', 'Фамилия', 'Имя', 'Отчество'])
+        list_of_distances = new_data['Дистанция'].tolist()
+        distances = clean_distances(list_of_distances)
+        new_data.pop('Дистанция')
+
+
+
+        sheet_name = os.path.splitext(os.path.basename(path))[0].split(' ')
+        sheet_name.pop(-1)
+        evetn = ''
+        for i in sheet_name:
+            evetn += str(i)
+            evetn += ' '
+        print(evetn)
+        year = os.path.splitext(os.path.basename(path))[0].split(' ')[-1]
+
+        new_data.insert(loc=0, column='Мероприятие', value=evetn)
+        new_data.insert(loc=1, column='Год события', value=year)
+        new_data.insert(loc=2, column='Дистанция', value=distances)
+
+
+        new_data = new_data.drop_duplicates(subset=['Мероприятие', 'Дистанция', 'Фамилия', 'Имя', 'Отчество'])
 
         pd.set_option('display.max_columns', None) #ввывод всех столбцов df
         print(new_data.head(10))
-        with pd.ExcelWriter(path2, engine='openpyxl', mode='a') as writer:
-            new_data.to_excel(writer, sheet_name=os.path.splitext(os.path.basename(path))[0])
+        with pd.ExcelWriter(path2, engine='openpyxl', mode='a', if_sheet_exists="overlay") as writer:
+            new_data.to_excel(writer, startrow=writer.sheets['Sheet1'].max_row, header=None, index=False)
 
 
 
@@ -117,11 +155,16 @@ path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
 path3 = '/Users/valentinabelezak/Downloads/topliga_parser/data/Хард ран 2020.xls'
 path_error = '/Users/valentinabelezak/Downloads/topliga_parser/data/Календарь 2023 - рабочий.xlsx'
 
-add_date('/Users/valentinabelezak/Downloads/topliga_parser/Data_2023/Сочи Марафон 2023.xls')
-# data = pd.read_excel(path2)
-# data = data.fillna(method='ffill', axis=0)
-# data=data.drop_duplicates(subset=['Дистанция', 'Фамилия', 'Имя', 'Отчество'])
-# pd.set_option('display.max_columns', None)
-# print(data.head(10))
+# add_date('/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2023/СМ 2023.xls')
 
-# print(list_of_cities[-1])
+# list_of_name_events = os.listdir('/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2019/')
+add_data(f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2023/СА 2023.xls')
+# for i in [23]:
+#     path = f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_20{i}/'
+#     list_of_name_events = os.listdir(f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_20{i}/')
+#     for j in list_of_name_events:
+#
+#         if j.split('.')[-1] == 'xls' or j.split('.') == 'xlsx':
+#             add_data(f'{path}{j}')
+
+# print(os.listdir('/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2021/'))

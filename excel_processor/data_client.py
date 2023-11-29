@@ -7,6 +7,38 @@ from datetime import date, datetime
 # import xlrd
 from translate import Translator
 
+def clean_distances(list_of_distances: list):
+    print(list_of_distances)
+    print(len(list_of_distances))
+    export_data = []
+    for distance in list_of_distances:
+        if 'Детский забег' in distance or '1,6 км,' in distance or '0-12' in distance:
+            distance = 'Детская миля'
+        elif 'Детская миля' in distance:
+            distance = 'Детская миля'
+        elif '42' in distance:
+            distance = '42.2 км'
+        elif '21' in distance:
+            distance = '21.1 км'
+        elif '10' in distance and 'км' in distance:
+            distance = '10 км'
+        elif 'Laura' in distance:
+            distance = 'Лаура'
+        elif 'Online' in distance:
+            distance = 'Онлайн'
+        elif 'SWIMRUN' in distance and 'Sprint' not in distance:
+            distance = 'SwimRun'
+        elif 'SWIMRUN' in distance and 'Sprint' in distance:
+            distance = 'SwimRun Sprint'
+        elif 'эстафета 2*5 км' in distance or 'Эстафета 2х5 км' in distance:
+            distance = 'эстафета 2 х 5 км'
+        else:
+            distance = distance
+
+
+        export_data.append(distance)
+    print(export_data)
+    return export_data
 
 def delete_prefix(list_of_cities: list) -> list:
     prefix_of_cities = ['г', 'г.', 'с', 'с.', 'д', 'д.', 'п', 'п.', 'рп', 'рп.', 'пгт.', 'пгт', 'ст-ца']
@@ -74,18 +106,14 @@ def add_order(path, clients, event, dict_client_distance):
     print("Все данные загружены")
 
 
-def add_distance(path):
+def add_distance(distance):
     path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/data_distance.xlsx'
-    data = pd.read_excel(path)
-    data = data.fillna(method='ffill', axis=0)
-    dd = data.drop_duplicates(subset=['Дистанция'])
-    dictence = dd['Дистанция'].tolist()
 
     data_distance = pd.read_excel(path2, sheet_name='Sheet1')
     index = len(data_distance.index)
     distances = {}
 
-    for i in dictence:
+    for i in distance:
         if index != 0:
             if i in data_distance['Дистанция'].tolist():
                 index = int(data_distance.index[data_distance["Дистанция"] == i].tolist()[0]) + 1
@@ -150,10 +178,14 @@ def add_data(path):
     path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/data_client.xlsx'
     data = pd.read_excel(path)
     data = data.fillna(method='ffill', axis=0)
+    list_of_distances = data['Дистанция'].tolist()
+    distances = clean_distances(list_of_distances)
+    data.pop('Дистанция')
+    data.insert(loc=2, column='Дистанция', value=distances)
 
     data_clients = pd.read_excel(path2, sheet_name='Sheet1')
 
-    distances = add_distance(path)
+    distances = add_distance(distances)
 
     columns = ['Фамилия', 'Имя', 'Отчество', 'Дата рождения', 'Пол', 'Страна', 'Регион', 'Город', 'Улица', 'Дом',
                'Мобильный телефон', 'Электронная почта', 'Профессия', 'Клуб']
@@ -217,7 +249,20 @@ def add_data(path):
 
 
 
-add_data('/Users/valentinabelezak/Downloads/topliga_parser/data/Город 226 2019.xls')
+# add_data('/Users/valentinabelezak/Downloads/topliga_parser/data/Город 226 2019.xls')
 # add_data('/Users/valentinabelezak/Downloads/topliga_parser/data/Суворов трейл 2023.xls')
 # add_data('/Users/valentinabelezak/Downloads/topliga_parser/data/Бьюти ран 2023.xls')
 # add_distance('/Users/valentinabelezak/Downloads/topliga_parser/data/Город 226 2019.xls')
+
+# for i in ['19', '20', '21', '22', '23']:
+#     list_of_name_events = os.listdir(f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_20{i}/')
+#     for j in list_of_name_events:
+#         add_data(f'{list_of_name_events}{j}')
+
+list_of_name_events = os.listdir('/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2019/')
+
+#
+# for i in list_of_name_events:
+#     add_data(f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2019/{i}')
+
+add_data(f'/Users/valentinabelezak/Downloads/topliga_parser/data/Data_2019/СМ 2019.xls')
