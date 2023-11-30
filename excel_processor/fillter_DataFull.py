@@ -149,7 +149,7 @@ def parsing_date(years: list = None, events: list = None, distances: list = None
     else:
         list_of_df = []
         for i in years:
-            df = dataFULL.dropna()[dataFULL.dropna()['Год события'] == int(years[i])]
+            df = dataFULL.dropna()[dataFULL.dropna()['Год события'] == int(i)]
             # df = dataFULL[dataFULL['Год события'].str.contains(f'{years[i]}')]
             list_of_df.append(df)
         result_data = pd.concat(list_of_df)
@@ -160,10 +160,10 @@ def parsing_date(years: list = None, events: list = None, distances: list = None
 def list_of_events(year):
     path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
     dataFULL = pd.read_excel(path2)
-    if year != 'all':
-        df = dataFULL[dataFULL['Год события'] == int(year)]
-        events = df.Мероприятие.unique()
-    elif isinstance(year, list):
+    # if year != 'all':
+    #     df = dataFULL[dataFULL['Год события'] == int(year)]
+    #     events = df.Мероприятие.unique()
+    if isinstance(year, list):
         events = []
         for i in year:
             df = dataFULL[dataFULL['Год события'] == int(i)]

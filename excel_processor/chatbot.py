@@ -67,14 +67,13 @@ def year_keyboard():
 
 @bot.message_handler(content_types=['text'])
 def bot_message(message):
-    global year
 
     if message.text == 'Все года' or message.text.lower() in next_list:
         year = 'all'
         events_of_year = '\n'.join(list_of_events(year))
         bot.send_message(message.from_user.id, f'Список мероприятий:\n{events_of_year}')
         bot.send_message(message.from_user.id, 'Введите мероприятия через запятую:', reply_markup=event_keyboard())
-        bot.register_next_step_handler(message, get_event)
+        bot.register_next_step_handler(message, get_event, year)
     else:
         year = message.text
         list_of_years = list(year.split(", "))
@@ -86,7 +85,7 @@ def bot_message(message):
             bot.send_message(message.from_user.id, f'Список мероприятий:\n{events_of_year}')
         # year = message.text
         bot.send_message(message.from_user.id, 'Введите мероприятия через запятую:', reply_markup=event_keyboard())
-        bot.register_next_step_handler(message, get_event)
+        bot.register_next_step_handler(message, get_event, year)
     # if message.text != 'Все года':
     #     events = '\n'.join(list_of_events(year))
     #     bot.send_message(message.from_user.id, f'Список мероприятий:\n{events}')
@@ -127,14 +126,13 @@ def event_keyboard():
     return event_markup
 
 
-def get_event(message):
-    global event
+def get_event(message, year):
     if message.text.lower() in next_list:
         event = []
     else:
         event = message.text
     bot.send_message(message.from_user.id, 'Введите дистанции: ', reply_markup=dist_keyboard())
-    bot.register_next_step_handler(message, get_distance)
+    bot.register_next_step_handler(message, get_distance, year, event)
 
 
 def dist_keyboard():
@@ -158,8 +156,7 @@ def dist_keyboard():
     return dist_markup
 
 
-def get_distance(message):
-    global distance
+def get_distance(message, year, event):
     if message.text.lower() in next_list:
         distance = []
     elif message.text == 'Короткие дистанции':
@@ -173,7 +170,7 @@ def get_distance(message):
 
 
     bot.send_message(message.from_user.id, 'Введите пол участников: ', reply_markup=gender_keyboard())
-    bot.register_next_step_handler(message, get_gender)
+    bot.register_next_step_handler(message, get_gender, year, event, distance)
 
 
 def gender_keyboard():
@@ -188,14 +185,13 @@ def gender_keyboard():
     return gender_markup
 
 
-def get_gender(message):
-    global gender
+def get_gender(message, year, event, distance):
     if message.text.lower() == 'М и Ж' or message.text.lower() in next_list:
         gender = []
     else:
         gender = message.text
     bot.send_message(message.from_user.id, 'Введите города: ', reply_markup=city_keyboard())
-    bot.register_next_step_handler(message, get_city)
+    bot.register_next_step_handler(message, get_city, year, event, distance, gender)
 
 
 def city_keyboard():
@@ -217,8 +213,7 @@ def city_keyboard():
     return city_markup
 
 
-def get_city(message):
-    global city
+def get_city(message, year, event, distance, gender):
     if message.text.lower() in next_list:
         city = []
     elif message.text == 'ЮФО':
@@ -235,7 +230,7 @@ def get_city(message):
         print(city)
     bot.send_message(message.from_user.id, 'Введите начальный и финальный возраст через - без пробелов:',
                      reply_markup=age_keyboard())
-    bot.register_next_step_handler(message, get_age)
+    bot.register_next_step_handler(message, get_age, year, event, distance, gender, city)
 
 
 def age_keyboard():
@@ -251,8 +246,7 @@ def age_keyboard():
     return age_markup
 
 
-def get_age(message):
-    global age
+def get_age(message, year, event, distance, gender, city):
     if message.text.lower() in next_list:
         age = []
     elif message.text == 'Дети':
