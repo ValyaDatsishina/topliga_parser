@@ -50,6 +50,7 @@ def get_start(message):
         bot.send_message(message.from_user.id, "Нет доступа")
 
 
+
 def year_keyboard():
     year_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
