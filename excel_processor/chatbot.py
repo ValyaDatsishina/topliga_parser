@@ -70,39 +70,24 @@ def bot_message(message):
 
     if message.text == 'Все года' or message.text.lower() in next_list:
         year = 'all'
-        events_of_year = '\n'.join(list_of_events(year))
-        bot.send_message(message.from_user.id, f'Список мероприятий:\n{events_of_year}')
+        events_of_year = list_of_events(year)
+        text = '\n'.join(events_of_year)
+        bot.send_message(message.from_user.id, f'Список мероприятий:\n{text}')
         bot.send_message(message.from_user.id, 'Введите мероприятия через запятую:', reply_markup=event_keyboard())
-        bot.register_next_step_handler(message, get_event, year)
+        bot.register_next_step_handler(message, get_event, year, events_of_year)
     else:
         year = message.text
         list_of_years = list(year.split(", "))
-        if len(list_of_years) == 1:
-            events_of_year = '\n'.join(list_of_events(year))
-            bot.send_message(message.from_user.id, f'Список мероприятий:\n{events_of_year}')
-        elif len(list_of_years) > 1:
-            events_of_year = '\n'.join(list_of_events(list_of_years))
-            bot.send_message(message.from_user.id, f'Список мероприятий:\n{events_of_year}')
-        # year = message.text
-        bot.send_message(message.from_user.id, 'Введите мероприятия через запятую:', reply_markup=event_keyboard())
-        bot.register_next_step_handler(message, get_event, year)
-    # if message.text != 'Все года':
-    #     events = '\n'.join(list_of_events(year))
-    #     bot.send_message(message.from_user.id, f'Список мероприятий:\n{events}')
-    # else:
-    #     year_all = 'all'
-    #     events = '\n'.join(list_of_events(year_all))
-    #     bot.send_message(message.from_user.id, f'Список мероприятий:\n{events}')
-
-    # event = message.text
-    # list_events = list(event.split(", "))
-    # for event_1 in list_events:
-    #     if event_1 not in events:
-    #         bot.send_message(message.chat.id, 'Некорректно введено мероприятие, напишите мероприятие снова:',
-    #                          reply_markup=event_keyboard())
-    #         bot.register_next_step_handler(message, get_event)
-    #         break
-    #     else:
+        check_year = all(year.isdigit() for year in list_of_years)
+        if check_year is True:
+            events_of_year = list_of_events(list_of_years)
+            text = '\n'.join(events_of_year)
+            bot.send_message(message.from_user.id, f'Список мероприятий:\n{text}')
+            bot.send_message(message.from_user.id, 'Введите мероприятия через запятую:', reply_markup=event_keyboard())
+            bot.register_next_step_handler(message, get_event, year, events_of_year)
+        else:
+            bot.send_message(message.from_user.id, "Введите год старта:", reply_markup=year_keyboard())
+            bot.register_next_step_handler(message, bot_message)
 
 
 
@@ -126,13 +111,28 @@ def event_keyboard():
     return event_markup
 
 
-def get_event(message, year):
+def get_event(message, year, events_of_year):
     if message.text.lower() in next_list:
         event = []
+        bot.send_message(message.from_user.id, 'Введите дистанции: ', reply_markup=dist_keyboard())
+        bot.register_next_step_handler(message, get_distance, year, event)
     else:
-        event = message.text
-    bot.send_message(message.from_user.id, 'Введите дистанции: ', reply_markup=dist_keyboard())
-    bot.register_next_step_handler(message, get_distance, year, event)
+        list_of_events = list(message.text.split(", "))
+
+        for event in list_of_events:
+            check_event = any(event in f for f in events_of_year)
+            if check_event is True:
+                bot.send_message(message.from_user.id, 'Введите дистанции: ', reply_markup=dist_keyboard())
+                bot.register_next_step_handler(message, get_distance, year, list_of_events)
+            else:
+                print(event)
+                print(events_of_year[-1])
+                text = '\n'.join(events_of_year)
+                events_of_year = events_of_year
+                year=year
+                text1 = f'Мероприятие введено не верно, введите заново.\nСписок мероприятий:\n{text}'
+                bot.send_message(message.from_user.id, text1, reply_markup=event_keyboard())
+                bot.register_next_step_handler(message, get_event, year, events_of_year)
 
 
 def dist_keyboard():
@@ -250,13 +250,21 @@ def get_age(message, year, event, distance, gender, city):
     if message.text.lower() in next_list:
         age = []
     elif message.text == 'Дети':
-        age = [1, 14]
+        age = [0, 14]
     elif message.text == '30-40':
-        age = '30-40'
+        age = [30, 40]
     elif message.text == '60+':
-        age = '60-200'
+        age = [60, 200]
     else:
         age = message.text
+        list_of_ages = list(age.split("-"))
+        check_age = all(age.isdigit() for age in list_of_ages)
+        if check_age is True:
+            age = list_of_ages
+        else:
+            text = 'Возраст введен не корректно. Введите начальный и финальный возраст через - без пробелов:'
+            bot.send_message(message.from_user.id, text, reply_markup=age_keyboard())
+            bot.register_next_step_handler(message, get_age, year, event, distance, gender, city)
     start_filter_telegram(year, event, distance, gender, city, age)
     bot.send_message(message.from_user.id, 'Данные в таблице')
     bot.send_document(message.from_user.id, document=open('Parser_data.xlsx', 'rb'))
@@ -268,6 +276,8 @@ def get_age(message, year, event, distance, gender, city):
     bot.send_message(message.from_user.id,
                      'Начнем заново?',
                      reply_markup=keyboard)
+
+
 
 
 

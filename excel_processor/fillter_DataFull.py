@@ -11,7 +11,7 @@ def calculate_age(list_of_born):
     for a in list_of_born:
         born = datetime.strptime(a, "%d.%m.%Y").date()
         a = int((today - born).days // 365.2524)
-        export_data.append(str(a))
+        export_data.append(a)
 
     return export_data
 
@@ -32,7 +32,7 @@ def filter_age(data, ages: list = None):
     # print(type(age[0]))
     if len(ages) == 1:
         # result_data = data[data['Возраст'].str.contains(f'{age[0]}')]
-        result_data = data.loc[data['Возраст'] > int(ages[0])]
+        result_data = data.loc[data['Возраст'] == int(ages[0])]
         data_to_excel(data=result_data)
         # pd.set_option('display.max_columns', None)  # ввывод всех столбцов df
         # print(result_data)
@@ -44,12 +44,15 @@ def filter_age(data, ages: list = None):
 
     elif len(ages) == 2:
         if int(ages[0]) < int(ages[1]):
-            data = data.loc[data['Возраст'] > int(ages[0])]
-            result_data = data.loc[data['Возраст'] < int(ages[1])]
+            data = data.loc[data['Возраст'] >= int(ages[0])]
+            result_data = data.loc[data['Возраст'] <= int(ages[1])]
             data_to_excel(data=result_data)
         elif int(ages[0]) > int(ages[1]):
-            data = data.loc[data['Возраст'] < int(ages[0])]
-            result_data = data.loc[data['Возраст'] > int(ages[1])]
+            data = data.loc[data['Возраст'] <= int(ages[0])]
+            result_data = data.loc[data['Возраст'] >= int(ages[1])]
+            data_to_excel(data=result_data)
+        elif int(ages[0]) == int(ages[1]):
+            result_data = data.loc[data['Возраст'] == int(ages[0])]
             data_to_excel(data=result_data)
     else:
         print('Введите только 2 числа, когда пришете возрат. Дальнейший список будет без фильтра по возрасту')
@@ -164,15 +167,19 @@ def list_of_events(year):
     #     df = dataFULL[dataFULL['Год события'] == int(year)]
     #     events = df.Мероприятие.unique()
     if isinstance(year, list):
-        events = []
+        years = []
         for i in year:
-            df = dataFULL[dataFULL['Год события'] == int(i)]
-            events.append(df.Мероприятие.unique())
+            years.append(int(i))
+
+        df = dataFULL[dataFULL['Год события'].isin(years)]
+        events = df.Мероприятие.unique().tolist()
+        # events.tolist()
+
+        return events
 
     elif year == 'all':
-        events = dataFULL.Мероприятие.unique()
-
-    return events
+        events = dataFULL.Мероприятие.unique().tolist()
+        return events
 
 
 def start_filter_telegram(year, event, distance, gender, city, age):
@@ -184,8 +191,8 @@ def start_filter_telegram(year, event, distance, gender, city, age):
     else:
         list_of_years = list(year.split(", "))
 
-    if event == []:
-        list_of_events = []
+    if isinstance(event, list):
+        list_of_events = event
     else:
         list_of_events = list(event.split(", "))
 
