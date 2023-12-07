@@ -4,9 +4,10 @@ import pandas as pd
 import telebot
 from dotenv import main
 import os
-from telebot import types
 
 from excel_processor.fillter_DataFull import start_filter_telegram, list_of_events
+from excel_processor.keyboards import year_keyboard, event_keyboard, dist_keyboard, gender_keyboard, city_keyboard, \
+    age_keyboard, parameter_keyboard
 
 main.load_dotenv()
 
@@ -32,11 +33,9 @@ sfd_list = krd_list + data_city['Город'].tolist()
 data_city = pd.read_excel(path, sheet_name='Sheet3')  # Москва и область
 msk_list = ['Москва'] + data_city['Название'].tolist()
 
-
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.send_message(chat_id=message.from_user.id, text=f'Привет! Твой id: {message.from_user.id}')
-
 
 @bot.message_handler(commands=['parser'], content_types=['text'])
 @bot.callback_query_handler(func=lambda call: call.data == 'parser')
@@ -46,21 +45,6 @@ def get_start(message):
         bot.register_next_step_handler(message, bot_message)
     else:
         bot.send_message(message.from_user.id, "Нет доступа")
-
-
-def year_keyboard():
-    year_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('2019')
-    item2 = types.KeyboardButton('2020')
-    item3 = types.KeyboardButton('2021')
-    item4 = types.KeyboardButton('2022')
-    item5 = types.KeyboardButton('2023')
-    item6 = types.KeyboardButton('Все года')
-
-    year_markup.add(item1, item2, item3, item4, item5, item6)
-
-    return year_markup
 
 
 @bot.message_handler(content_types=['text'])
@@ -88,27 +72,6 @@ def bot_message(message):
             bot.send_message(message.from_user.id, "Введите год старта:", reply_markup=year_keyboard())
             bot.register_next_step_handler(message, bot_message)
 
-
-def event_keyboard():
-    event_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('СМ')
-    item2 = types.KeyboardButton('СА')
-    item3 = types.KeyboardButton('SwimRun')
-    item4 = types.KeyboardButton('Город')
-    item5 = types.KeyboardButton('Морская Миля')
-    item6 = types.KeyboardButton('Ночной')
-    item7 = types.KeyboardButton('Beauty run')
-    item8 = types.KeyboardButton('ТРИ ГОРЫ')
-    item9 = types.KeyboardButton('Любое')
-
-    event_markup.add(item1, item2, item3)
-    event_markup.add(item4, item5, item6)
-    event_markup.add(item7, item8, item9)
-
-    return event_markup
-
-
 def get_event(message, year, events_of_year):
     if message.text.lower() in next_list:
         event = []
@@ -135,27 +98,6 @@ def get_event(message, year, events_of_year):
                 bot.register_next_step_handler(message, get_event, year, events_of_year)
 
 
-def dist_keyboard():
-    dist_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('42.2 км')
-    item2 = types.KeyboardButton('21.1 км')
-    item3 = types.KeyboardButton('10 км')
-    item4 = types.KeyboardButton('5 км')
-    item5 = types.KeyboardButton('Детская миля')
-    item6 = types.KeyboardButton('Короткие дистанции')
-    item7 = types.KeyboardButton('Плавание')
-    item8 = types.KeyboardButton('Вело')
-    item9 = types.KeyboardButton('SwimRun')
-    item10 = types.KeyboardButton('Любая')
-
-    dist_markup.add(item1, item2, item3, item4, item5, item6)
-    dist_markup.add(item7, item8, item9)
-    dist_markup.add(item10)
-
-    return dist_markup
-
-
 def get_distance(message, year, event):
     if message.text.lower() in next_list:
         distance = []
@@ -178,16 +120,6 @@ def get_distance(message, year, event):
         bot.register_next_step_handler(message, get_gender, year, event, distance)
 
 
-def gender_keyboard():
-    gender_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('М')
-    item2 = types.KeyboardButton('Ж')
-    item3 = types.KeyboardButton('Любой')
-
-    gender_markup.add(item1, item2, item3)
-
-    return gender_markup
 
 
 def get_gender(message, year, event, distance):
@@ -203,25 +135,6 @@ def get_gender(message, year, event, distance):
     else:
         bot.send_message(message.from_user.id, 'Введите города: ', reply_markup=city_keyboard())
         bot.register_next_step_handler(message, get_city, year, event, distance, gender)
-
-
-def city_keyboard():
-    city_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('Краснодар')
-    item2 = types.KeyboardButton('Сочи')
-    item3 = types.KeyboardButton('Геленджик')
-    item4 = types.KeyboardButton('Анапа')
-    item5 = types.KeyboardButton('Москва и МО')
-    item6 = types.KeyboardButton('Ростов')
-    item7 = types.KeyboardButton('Краснодарский край')
-    item8 = types.KeyboardButton('ЮФО')
-    item9 = types.KeyboardButton('Любой')
-
-    city_markup.add(item1, item2, item3, item4, item5, item6)
-    city_markup.add(item7, item8, item9)
-
-    return city_markup
 
 
 def get_city(message, year, event, distance, gender):
@@ -247,18 +160,6 @@ def get_city(message, year, event, distance, gender):
                          reply_markup=age_keyboard())
         bot.register_next_step_handler(message, get_age, year, event, distance, gender, city)
 
-
-def age_keyboard():
-    age_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('Дети')
-    item2 = types.KeyboardButton('30-40')
-    item3 = types.KeyboardButton('60+')
-    item4 = types.KeyboardButton('Любой')
-
-    age_markup.add(item1, item2, item3, item4)
-
-    return age_markup
 
 
 def get_age(message, year, event, distance, gender, city):
@@ -289,17 +190,6 @@ def get_age(message, year, event, distance, gender, city):
         bot.send_message(message.from_user.id, 'Удалить дубли?',
                          reply_markup=parameter_keyboard())
         bot.register_next_step_handler(message, get_parameter, year, event, distance, gender, city, age)
-
-
-def parameter_keyboard():
-    parameter_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-
-    item1 = types.KeyboardButton('Пропустить')
-    item2 = types.KeyboardButton('Удалить дубли')
-
-    parameter_markup.add(item1, item2)
-
-    return parameter_markup
 
 
 def get_parameter(message, year, event, distance, gender, city, age):

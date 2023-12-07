@@ -171,9 +171,6 @@ def  parsing_date(parameter_duplicates: str, years: list = None, events: list = 
 def list_of_events(year):
     path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
     dataFULL = pd.read_excel(path2)
-    # if year != 'all':
-    #     df = dataFULL[dataFULL['Год события'] == int(year)]
-    #     events = df.Мероприятие.unique()
     if isinstance(year, list):
         years = []
         for i in year:
@@ -181,7 +178,6 @@ def list_of_events(year):
 
         df = dataFULL[dataFULL['Год события'].isin(years)]
         events = df.Мероприятие.unique().tolist()
-        # events.tolist()
 
         return events
 
