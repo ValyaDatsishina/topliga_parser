@@ -7,9 +7,12 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - ./.env
+      - .env
     deploy:
       restart_policy:
         condition: on-failure
         delay: 5s
 
+networks:
+  custom:
+    driver: bridge

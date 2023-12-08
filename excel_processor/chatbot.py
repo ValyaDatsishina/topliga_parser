@@ -199,7 +199,7 @@ def get_parameter(message, year, event, distance, gender, city, age):
         parameter_dublicate = 'drop_duplicates'
     start_filter_telegram(parameter_dublicate, year, event, distance, gender, city, age)
     bot.send_message(message.from_user.id, 'Данные в таблице')
-    bot.send_document(message.from_user.id, document=open('excel_processor/Parser_data.xlsx', 'rb'))
+    bot.send_document(message.from_user.id, document=open('Parser_data.xlsx', 'rb'))
     keyboard = telebot.types.InlineKeyboardMarkup()
 
     button_parser = telebot.types.InlineKeyboardButton(text="Начать сначала",
