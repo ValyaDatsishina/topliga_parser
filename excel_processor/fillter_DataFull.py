@@ -21,8 +21,8 @@ def data_to_excel(data, parameter_duplicates: str):
     if parameter_duplicates == 'all_dataframe':
         data.to_excel(parser_data, index=False)
     elif parameter_duplicates == 'drop_duplicates':
-        new_data = data.drop_duplicates(subset=['Фамилия', 'Имя', 'Электронная почта'])
-        new_data.to_excel(parser_data, index=False)
+        data = data.drop_duplicates(subset=['Фамилия', 'Имя', 'Электронная почта'])
+        data.to_excel(parser_data, index=False)
 
     print('Данные в таблице')
 
