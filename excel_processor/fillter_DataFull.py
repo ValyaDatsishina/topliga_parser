@@ -2,7 +2,10 @@ from datetime import date, datetime
 import pandas as pd
 import openpyxl as xl
 
-import xlrd
+from dotenv import main
+import os
+
+main.load_dotenv()
 
 
 def calculate_age(list_of_born):
@@ -17,7 +20,7 @@ def calculate_age(list_of_born):
 
 
 def data_to_excel(data, parameter_duplicates: str):
-    parser_data = '/Users/valentinabelezak/Downloads/topliga_parser/excel_processor/Parser_data.xlsx'
+    parser_data = os.getenv('PATH_PARSER_DATA')
     if parameter_duplicates == 'all_dataframe':
         data.to_excel(parser_data, index=False)
     elif parameter_duplicates == 'drop_duplicates':
@@ -141,7 +144,7 @@ def parsing_events(data, parameter_duplicates: str, events: list = None, distanc
 
 def  parsing_date(parameter_duplicates: str, years: list = None, events: list = None, distances: list = None,
                  gender: list = None, cities: list = None, ages: list = None):
-    path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
+    path2 = os.getenv('PATH_FULL_DATA')
     dataFULL = pd.read_excel(path2, sheet_name='Sheet1')
     dataFULL[['Город']] = dataFULL[['Город']].fillna('нет данных')
     # dataFULL = dataFULL.fillna(0)
@@ -169,7 +172,7 @@ def  parsing_date(parameter_duplicates: str, years: list = None, events: list = 
 
 # Вывод список мероприятий в ТГ
 def list_of_events(year):
-    path2 = '/Users/valentinabelezak/Downloads/topliga_parser/data/DataFULL.xlsx'
+    path2 = os.getenv('PATH_FULL_DATA')
     dataFULL = pd.read_excel(path2)
     if isinstance(year, list):
         years = []

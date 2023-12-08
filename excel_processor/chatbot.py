@@ -25,7 +25,7 @@ swim_list = ['Плавание', 'SwimRun']
 velo_list = ['велогонк', 'Красная поляна', 'Лаура', 'Русские горки', 'Дуатлон']
 
 # База всех городов и населенных пунктов
-path = '/Users/valentinabelezak/Downloads/topliga_parser/data/spisok_gorodov_v_rossii-1021j.xlsx'
+path = os.getenv('PATH_LIST_OF_CITY')
 data_city = pd.read_excel(path, sheet_name='Sheet2')  # Краснодарский край
 krd_list = data_city['Название'].tolist()
 data_city = pd.read_excel(path, sheet_name='Sheet1')  # ЮФО
